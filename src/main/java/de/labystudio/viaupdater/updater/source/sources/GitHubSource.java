@@ -21,9 +21,11 @@ import static de.labystudio.viaupdater.updater.source.provider.StatusType.PROGRE
 public class GitHubSource implements Source<GitHubProject> {
 
     private final GitHubApi api;
+    private final boolean isolatedCache;
 
-    public GitHubSource(String token) {
+    public GitHubSource(String token, boolean isolatedCache) {
         this.api = new GitHubApi(token);
+        this.isolatedCache = isolatedCache;
     }
 
     @Override
@@ -55,7 +57,7 @@ public class GitHubSource implements Source<GitHubProject> {
                     this.api.downloadSourceCode(sourceProject, sourceZip);
 
                     context.updateStatus(PROGRESS, "Building " + project.name() + " project...");
-                    Path builtJar = new ProjectBuilder(sourceZip, buildDirectory).build();
+                    Path builtJar = new ProjectBuilder(sourceZip, buildDirectory, this.isolatedCache).build();
 
                     Path out = outDirectory.resolve(builtJar.getFileName());
                     Files.copy(builtJar, out, StandardCopyOption.REPLACE_EXISTING);

@@ -16,10 +16,12 @@ public class ProjectBuilder {
 
     private final Path zipSourceIn;
     private final Path buildDirectory;
+    private final boolean isolatedCache;
 
-    public ProjectBuilder(Path zipSourceIn, Path buildDirectory) {
+    public ProjectBuilder(Path zipSourceIn, Path buildDirectory, boolean isolatedCache) {
         this.zipSourceIn = zipSourceIn;
         this.buildDirectory = buildDirectory;
+        this.isolatedCache = isolatedCache;
     }
 
     public Path build() throws IOException {
@@ -48,8 +50,11 @@ public class ProjectBuilder {
                 .redirectOutput(ProcessBuilder.Redirect.DISCARD)
                 .redirectError(ProcessBuilder.Redirect.INHERIT);
         pb.environment().put("JAVA_HOME", System.getProperty("java.home"));
-        pb.environment().put("GRADLE_USER_HOME", gradleHome.toAbsolutePath().toString());
-        pb.environment().put("GRADLE_OPTS", "-Dmaven.repo.local=" + mavenLocal.toAbsolutePath());
+
+        if (this.isolatedCache) {
+            pb.environment().put("GRADLE_USER_HOME", gradleHome.toAbsolutePath().toString());
+            pb.environment().put("GRADLE_OPTS", "-Dmaven.repo.local=" + mavenLocal.toAbsolutePath());
+        }
 
         try {
             int exitCode = pb.start().waitFor();

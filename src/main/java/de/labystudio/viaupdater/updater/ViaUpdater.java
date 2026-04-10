@@ -29,6 +29,7 @@ public class ViaUpdater {
     private final List<ViaProject> projects = new ArrayList<>();
 
     private boolean cleanup = false;
+    private boolean isolatedCache = true;
 
     public void registerSource(Source<?> project) {
         this.sourceRegistry.register(project);
@@ -48,6 +49,7 @@ public class ViaUpdater {
         Map<String, Object> root = new Yaml().load(input);
 
         this.cleanup = Boolean.TRUE.equals(root.getOrDefault("cleanup", false));
+        this.isolatedCache = !Boolean.FALSE.equals(root.getOrDefault("isolated-cache", true));
 
         Map<String, Object> jenkins = (Map<String, Object>) root.get("jenkins");
         if (jenkins != null) {
@@ -56,7 +58,7 @@ public class ViaUpdater {
 
         Map<String, Object> github = (Map<String, Object>) root.get("github");
         if (github != null) {
-            this.registerSource(new GitHubSource((String) github.get("token")));
+            this.registerSource(new GitHubSource((String) github.get("token"), this.isolatedCache));
         }
 
         List<Map<String, Object>> projects = (List<Map<String, Object>>) root.get("projects");

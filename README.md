@@ -11,7 +11,7 @@ Projects are fully configurable through a YAML config file.
 - Per-project source selection with a named default
 - Auto-update scheduler with a configurable interval
 - In-game command with tab completion
-- Isolated Gradle and Maven cache inside the tmp folder during source builds
+- Isolated Gradle and Maven cache inside the tmp folder during source builds (configurable)
 
 ## Installation
 
@@ -26,6 +26,10 @@ Projects are fully configurable through a YAML config file.
 ```yaml
 # Whether to delete build data automatically after completion
 cleanup: false
+
+# Redirect GRADLE_USER_HOME and Maven local repository into the tmp folder during source builds
+# Keeps the global Gradle/Maven cache untouched
+isolated-cache: true
 
 github:
   # Personal Access Token used to authenticate with GitHub API
