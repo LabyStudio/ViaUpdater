@@ -205,7 +205,10 @@ public class ViaUpdater {
             return stream
                     .filter(p -> {
                         String name = p.getFileName().toString();
-                        return name.startsWith(project.name()) && name.endsWith(".jar");
+                        String prefix = project.name() + "-";
+                        return name.endsWith(".jar")
+                                && name.startsWith(prefix)
+                                && Character.isDigit(name.charAt(prefix.length()));
                     })
                     .findFirst();
         }

@@ -33,7 +33,7 @@ projects:
   - name: ViaVersion
 
     # Default source to use when no specific source is requested
-    default: github-sponsor
+    default: jenkins
 
     sources:
       # Main GitHub repository (stable releases)
