@@ -1,0 +1,124 @@
+# Whether to delete build data automatically after completion
+cleanup: false
+
+github:
+  # Personal Access Token used to authenticate with GitHub API
+  # Required to avoid rate limits and access private repositories if needed
+  # How to get it:
+  # 1. Go to: https://github.com/settings/tokens/new
+  # 2. Generate a new token (classic)
+  # 3. Select scope: "repo" (Full control of private repositories)
+  # 4. Copy the token and paste it here
+  token: <GITHUB-TOKEN>
+
+jenkins:
+  # Base URL of the ViaVersion Jenkins instance
+  endpoint: https://ci.viaversion.com
+
+auto-update:
+  # Enable or disable automatic update checks
+  enabled: false
+
+  # How often to check for updates (in hours)
+  interval: 24
+
+projects:
+  # =========================
+  # ViaVersion project config
+  # =========================
+  - name: ViaVersion
+
+    # Default source to use when no specific source is requested
+    default: github-sponsor
+
+    sources:
+      # Main GitHub repository (stable releases)
+      - id: github
+        type: GITHUB
+        owner: ViaVersion
+        repository: ViaVersion
+        branch: master
+        # If they add artifacts back to the public repository we could download them directly from GitHub
+        #workflow: build.yml
+
+      # Development / preview builds (sponsor-only repo)
+      - id: github-sponsor
+        type: GITHUB
+        owner: ViaVersion
+        repository: ViaVersionDev
+        branch: preview
+
+      # Jenkins CI builds
+      - id: jenkins
+        type: JENKINS
+        project: ViaVersion
+
+  # =========================
+  # ViaRewind project config
+  # =========================
+  - name: ViaRewind
+
+    # Use Jenkins builds by default
+    default: jenkins
+
+    sources:
+      # GitHub source (stable code)
+      - id: github
+        type: GITHUB
+        owner: ViaVersion
+        repository: ViaRewind
+        branch: master
+
+      # Jenkins CI builds
+      - id: jenkins
+        type: JENKINS
+        project: ViaRewind
+
+  # =========================
+  # ViaBackwards project config
+  # =========================
+  - name: ViaBackwards
+
+    # Default to Jenkins builds
+    default: jenkins
+
+    sources:
+      # GitHub stable repository
+      - id: github
+        type: GITHUB
+        owner: ViaVersion
+        repository: ViaBackwards
+        branch: master
+
+      # Development / preview repository (sponsor-only repo)
+      - id: github-sponsor
+        type: GITHUB
+        owner: ViaVersion
+        repository: ViaBackwardsDev
+        branch: preview
+
+      # Jenkins CI builds
+      - id: jenkins
+        type: JENKINS
+        project: ViaBackwards
+
+  # ==========================================
+  # ViaRewind Legacy Support project config
+  # ==========================================
+  - name: ViaRewind-Legacy-Support
+
+    # Default to Jenkins builds
+    default: jenkins
+
+    sources:
+      # GitHub repository
+      - id: github
+        type: GITHUB
+        owner: ViaVersion
+        repository: ViaRewind-Legacy-Support
+        branch: master
+
+      # Jenkins project
+      - id: jenkins
+        type: JENKINS
+        project: ViaRewind Legacy Support

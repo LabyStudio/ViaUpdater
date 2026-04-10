@@ -1,0 +1,12 @@
+name: ViaUpdater
+main: de.labystudio.viaupdater.paper.ViaUpdaterPlugin
+version: ${version}
+author: LabyStudio
+api-version: "1.21"
+
+commands:
+  viaupdater:
+    description: "Automatically updates ViaVersion plugins on a schedule or on demand."
+    usage: "/viaupdater <update <all|<name>> [source]|reload>"
+    aliases: [ viaupdate, updatevia, updateviaversion, via-update, via-updater ]
+    permission: viaupdater.command
