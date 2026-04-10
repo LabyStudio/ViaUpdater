@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 public class ProjectBuilder {
 
     private static final boolean WINDOWS = System.getProperty("os.name").toLowerCase().contains("win");
+    private static final String GRADLE_OPTS = "-Xmx512m";
 
     private final Path zipSourceIn;
     private final Path buildDirectory;
@@ -45,15 +46,16 @@ public class ProjectBuilder {
         Files.createDirectories(gradleHome);
         Files.createDirectories(mavenLocal);
 
-        ProcessBuilder pb = new ProcessBuilder(gradlew.toAbsolutePath().toString(), "publishToMavenLocal")
+        ProcessBuilder pb = new ProcessBuilder(gradlew.toAbsolutePath().toString(), "--no-daemon", "publishToMavenLocal")
                 .directory(directory.toFile())
                 .redirectOutput(ProcessBuilder.Redirect.DISCARD)
                 .redirectError(ProcessBuilder.Redirect.INHERIT);
         pb.environment().put("JAVA_HOME", System.getProperty("java.home"));
+        pb.environment().put("GRADLE_OPTS", GRADLE_OPTS);
 
         if (this.isolatedCache) {
             pb.environment().put("GRADLE_USER_HOME", gradleHome.toAbsolutePath().toString());
-            pb.environment().put("GRADLE_OPTS", "-Dmaven.repo.local=" + mavenLocal.toAbsolutePath());
+            pb.environment().put("GRADLE_OPTS", GRADLE_OPTS + " -Dmaven.repo.local=" + mavenLocal.toAbsolutePath());
         }
 
         try {
