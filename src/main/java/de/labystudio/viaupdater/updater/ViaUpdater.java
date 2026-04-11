@@ -1,5 +1,6 @@
 package de.labystudio.viaupdater.updater;
 
+import de.labystudio.viaupdater.updater.exception.CancelledException;
 import de.labystudio.viaupdater.updater.exception.UpdateException;
 import de.labystudio.viaupdater.updater.source.Source;
 import de.labystudio.viaupdater.updater.source.SourceRegistry;
@@ -30,6 +31,7 @@ public class ViaUpdater {
 
     private boolean cleanup = false;
     private boolean isolatedCache = true;
+    private volatile boolean cancelled = false;
 
     public void registerSource(Source<?> project) {
         this.sourceRegistry.register(project);
@@ -42,6 +44,10 @@ public class ViaUpdater {
     public void reset() {
         this.projects.clear();
         this.sourceRegistry.clear();
+    }
+
+    public void cancel() {
+        this.cancelled = true;
     }
 
     @SuppressWarnings("unchecked")
@@ -85,6 +91,7 @@ public class ViaUpdater {
     }
 
     public void updateAll(ProviderContext context) throws UpdateException {
+        this.cancelled = false;
         try {
             List<ViaProject> installed = this.projects.stream()
                     .filter(p -> this.isInstalled(context, p))
@@ -105,6 +112,7 @@ public class ViaUpdater {
     }
 
     public void update(ProviderContext context, ViaProject project) throws UpdateException {
+        this.cancelled = false;
         try {
             this.updateInternal(context, project, project.defaultSourceId());
         } finally {
@@ -117,6 +125,7 @@ public class ViaUpdater {
             ViaProject project,
             String sourceId
     ) throws UpdateException {
+        this.cancelled = false;
         try {
             this.updateInternal(context, project, sourceId);
         } finally {
@@ -129,15 +138,38 @@ public class ViaUpdater {
             ViaProject project,
             String sourceId
     ) throws UpdateException {
+        this.checkCancelled();
+
         try {
             Path newFile = this.sourceRegistry.provide(context, project, sourceId);
+
             this.deploy(context, project, newFile);
         } catch (ProviderException e) {
+            if (this.cancelled || hasCause(e, InterruptedException.class)) {
+                throw new CancelledException();
+            }
             throw new UpdateException("Failed to update " + project.name(), e);
         }
     }
 
+    private void checkCancelled() throws CancelledException {
+        if (this.cancelled || Thread.currentThread().isInterrupted()) {
+            throw new CancelledException();
+        }
+    }
+
+    private static boolean hasCause(Throwable t, Class<?> type) {
+        for (Throwable cause = t; cause != null; cause = cause.getCause()) {
+            if (type.isInstance(cause)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void deploy(ProviderContext context, ViaProject project, Path fileToDeploy) throws UpdateException {
+        this.checkCancelled();
+
         try {
             Path pluginsDir = context.pluginsDirectory();
             Path oldFile = this.findJar(context, project)

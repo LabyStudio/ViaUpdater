@@ -4,6 +4,7 @@ import de.labystudio.viaupdater.paper.PaperProviderContext;
 import de.labystudio.viaupdater.paper.ViaUpdaterPlugin;
 import de.labystudio.viaupdater.updater.ViaProject;
 import de.labystudio.viaupdater.updater.ViaUpdater;
+import de.labystudio.viaupdater.updater.exception.CancelledException;
 import de.labystudio.viaupdater.updater.exception.UpdateException;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -18,12 +19,9 @@ import org.jspecify.annotations.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class ViaUpdaterCommand implements CommandExecutor, TabCompleter {
 
-    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private final ViaUpdaterPlugin plugin;
 
     public ViaUpdaterCommand(ViaUpdaterPlugin plugin) {
@@ -37,11 +35,39 @@ public class ViaUpdaterCommand implements CommandExecutor, TabCompleter {
             @NotNull String @NonNull [] args
     ) {
         if (args.length == 0) {
-            sender.sendMessage(Component.text("Usage: /viaupdater <update <all|<name>> [source]|reload>", NamedTextColor.GRAY));
+            sender.sendMessage(
+                    Component.text("ViaUpdater ", NamedTextColor.GREEN)
+                            .append(Component.text(this.plugin.getPluginMeta().getVersion(), NamedTextColor.RED))
+                            .appendNewline()
+                            .append(Component.text("Commands:", NamedTextColor.GOLD))
+                            .appendNewline()
+                            .append(Component.text("/viaupdater update <all|<name>> [source]", NamedTextColor.DARK_GREEN))
+                            .append(Component.text(" - ", NamedTextColor.WHITE))
+                            .append(Component.text("Update all or a specific installed plugin.", NamedTextColor.GOLD))
+                            .appendNewline()
+                            .append(Component.text("/viaupdater cancel", NamedTextColor.DARK_GREEN))
+                            .append(Component.text(" - ", NamedTextColor.WHITE))
+                            .append(Component.text("Cancel the currently running update.", NamedTextColor.GOLD))
+                            .appendNewline()
+                            .append(Component.text("/viaupdater reload", NamedTextColor.DARK_GREEN))
+                            .append(Component.text(" - ", NamedTextColor.WHITE))
+                            .append(Component.text("Reload the config from disk.", NamedTextColor.GOLD))
+            );
             return true;
         }
 
         String subCommand = args[0];
+
+        if (subCommand.equalsIgnoreCase("cancel")) {
+            if (!this.plugin.isUpdateRunning()) {
+                sender.sendMessage(Component.text("No update is currently running.", NamedTextColor.YELLOW));
+                return true;
+            }
+
+            sender.sendMessage(Component.text("Cancelling current update...", NamedTextColor.YELLOW));
+            this.plugin.cancelCurrentUpdate();
+            return true;
+        }
 
         if (subCommand.equalsIgnoreCase("reload")) {
             try {
@@ -63,7 +89,7 @@ public class ViaUpdaterCommand implements CommandExecutor, TabCompleter {
             String sourceId = args.length >= 3 ? args[2] : null;
             PaperProviderContext context = new PaperProviderContext(this.plugin, sender);
 
-            this.executorService.submit(() -> {
+            this.plugin.submitTask(() -> {
                 try {
                     ViaUpdater updater = this.plugin.getUpdater();
                     if (target.equalsIgnoreCase("all")) {
@@ -88,8 +114,10 @@ public class ViaUpdaterCommand implements CommandExecutor, TabCompleter {
                             updater.update(context, project);
                         }
                     }
+                } catch (CancelledException e) {
+                    sender.sendMessage(Component.text("Update was cancelled.", NamedTextColor.YELLOW));
                 } catch (UpdateException e) {
-                    sender.sendMessage(Component.text("Update failed: " + rootCause(e), NamedTextColor.RED));
+                    sender.sendMessage(Component.text("Update failed: " + this.rootCause(e), NamedTextColor.RED));
                     this.plugin.getLogger().log(java.util.logging.Level.WARNING, "Update failed", e);
                 }
             });
@@ -109,7 +137,7 @@ public class ViaUpdaterCommand implements CommandExecutor, TabCompleter {
             @NotNull String @NotNull [] args
     ) {
         if (args.length == 1) {
-            return this.filter(List.of("update", "reload"), args[0]);
+            return this.filter(List.of("update", "cancel", "reload"), args[0]);
         }
 
         if (args[0].equalsIgnoreCase("update")) {

@@ -58,12 +58,14 @@ public class ProjectBuilder {
             pb.environment().put("GRADLE_OPTS", GRADLE_OPTS + " -Dmaven.repo.local=" + mavenLocal.toAbsolutePath());
         }
 
+        Process process = pb.start();
         try {
-            int exitCode = pb.start().waitFor();
+            int exitCode = process.waitFor();
             if (exitCode != 0) {
                 throw new RuntimeException("Gradle build failed with exit code " + exitCode);
             }
         } catch (InterruptedException e) {
+            process.destroyForcibly();
             Thread.currentThread().interrupt();
             throw new IOException("Gradle build was interrupted", e);
         }
