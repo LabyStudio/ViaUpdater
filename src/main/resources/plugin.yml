@@ -3,6 +3,12 @@ main: de.labystudio.viaupdater.paper.ViaUpdaterPlugin
 version: ${version}
 author: LabyStudio
 api-version: "1.21"
+load: STARTUP
+loadbefore:
+  - ViaVersion
+  - ViaBackwards
+  - ViaRewind
+  - ViaRewind-Legacy-Support
 
 commands:
   viaupdater:

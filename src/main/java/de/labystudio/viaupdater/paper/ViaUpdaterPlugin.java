@@ -18,9 +18,38 @@ public class ViaUpdaterPlugin extends JavaPlugin {
     private BukkitTask autoUpdateTask;
 
     @Override
-    public void onEnable() {
+    public void onLoad() {
         this.saveDefaultConfig();
-        this.setupConfig();
+
+        if (!this.getConfig().getBoolean("startup-update.enabled", false)) {
+            return;
+        }
+
+        // Load projects
+        this.loadConfig();
+
+        // If any configured project is already loaded the server has already started (e.g. PlugMan) — skip.
+        boolean alreadyRunning = this.updater.getProjects().stream()
+                .anyMatch(p -> this.getServer().getPluginManager().getPlugin(p.name()) != null);
+
+        if (alreadyRunning) {
+            this.getLogger().warning("Skipping startup-update: Via plugins are already loaded (not a real server startup).");
+            return;
+        }
+
+        this.getLogger().info("Running blocking startup update...");
+        PaperProviderContext context = new PaperProviderContext(this);
+        try {
+            this.updater.updateAll(context);
+        } catch (Exception e) {
+            this.getLogger().warning("Startup update failed: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void onEnable() {
+        this.loadConfig();
+        this.restartAutoUpdater();
 
         // Commands
         PluginCommand command = Objects.requireNonNull(this.getCommand("viaupdater"));
@@ -29,27 +58,28 @@ public class ViaUpdaterPlugin extends JavaPlugin {
         command.setTabCompleter(executor);
     }
 
-    public void reload() throws IOException {
+    private void loadConfig() {
+        this.updater.reset();
+        try (FileInputStream input = new FileInputStream(new File(this.getDataFolder(), "config.yml"))) {
+            this.updater.loadConfig(input);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load config during startup: " + e.getMessage());
+        }
+    }
+
+    public void reload() {
         this.reloadConfig();
+        this.loadConfig();
+        this.restartAutoUpdater();
+    }
+
+    private void restartAutoUpdater() {
         if (this.autoUpdateTask != null) {
             this.autoUpdateTask.cancel();
             this.autoUpdateTask = null;
         }
-        this.updater.reset();
-        this.setupConfig();
-    }
-
-    private void setupConfig() {
-        try (FileInputStream input = new FileInputStream(new File(this.getDataFolder(), "config.yml"))) {
-            this.updater.loadConfig(input);
-        } catch (IOException e) {
-            this.getLogger().severe("Failed to load config: " + e.getMessage());
-            return;
-        }
 
         FileConfiguration config = this.getConfig();
-
-        // Auto updater
         if (config.getBoolean("auto-update.enabled", false)) {
             long intervalTicks = config.getLong("auto-update.interval", 24) * 60 * 60 * 20L;
             this.autoUpdateTask = this.getServer().getScheduler().runTaskTimerAsynchronously(this, () -> {
