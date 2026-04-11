@@ -9,7 +9,9 @@ Projects are fully configurable through a YAML config file.
 - Update ViaVersion, ViaBackwards, ViaRewind, and any other configurable project
 - Two source types: Jenkins CI and GitHub (source build or workflow artifact)
 - Per-project source selection with a named default
+- Blocking startup update before ViaVersion loads
 - Auto-update scheduler with a configurable interval
+- Cancellable updates via `/viaupdater cancel`
 - In-game command with tab completion
 - Isolated Gradle and Maven cache inside the tmp folder during source builds (configurable)
 
@@ -44,6 +46,11 @@ github:
 jenkins:
   # Base URL of the ViaVersion Jenkins instance
   endpoint: https://ci.viaversion.com
+
+startup-update:
+  # Run a blocking update during server startup, before ViaVersion is loaded.
+  # Has no effect when the plugin is loaded at runtime (e.g. via PlugMan).
+  enabled: false
 
 auto-update:
   # Enable or disable automatic update checks
@@ -117,6 +124,7 @@ Permission: `viaupdater.command`
 | `/viaupdater update all`                  | Update all installed plugins using their default source |
 | `/viaupdater update <name>`               | Update a single plugin using its default source      |
 | `/viaupdater update <name> <source>`      | Update a single plugin using a specific source       |
+| `/viaupdater cancel`                      | Cancel the currently running update                  |
 | `/viaupdater reload`                      | Reload the config without restarting the server      |
 
 Aliases: `viaupdate`, `updatevia`, `updateviaversion`
