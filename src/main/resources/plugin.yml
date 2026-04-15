@@ -1,5 +1,5 @@
 name: ViaUpdater
-main: de.labystudio.viaupdater.paper.ViaUpdaterPlugin
+main: de.labystudio.viaupdater.bukkit.ViaUpdaterPlugin
 version: ${version}
 author: LabyStudio
 api-version: "1.21"

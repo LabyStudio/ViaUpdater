@@ -1,6 +1,6 @@
 # ViaUpdater
 
-A Paper plugin that keeps your ViaVersion plugins up to date automatically.
+A Bukkit plugin that keeps your ViaVersion plugins up to date automatically.
 It supports pulling builds from Jenkins CI servers and from GitHub Actions artifacts or source code.
 Projects are fully configurable through a YAML config file.
 
@@ -9,7 +9,7 @@ Projects are fully configurable through a YAML config file.
 - Update ViaVersion, ViaBackwards, ViaRewind, and any other configurable project
 - Two source types: Jenkins CI and GitHub (source build or workflow artifact)
 - Per-project source selection with a named default
-- Blocking startup update before ViaVersion loads
+- Blocking shutdown update that runs when the server stops
 - Auto-update scheduler with a configurable interval
 - Cancellable updates via `/viaupdater cancel`
 - In-game command with tab completion
@@ -47,9 +47,9 @@ jenkins:
   # Base URL of the ViaVersion Jenkins instance
   endpoint: https://ci.viaversion.com
 
-startup-update:
-  # Run a blocking update during server startup, before ViaVersion is loaded.
-  # Has no effect when the plugin is loaded at runtime (e.g. via PlugMan).
+shutdown-update:
+  # Run a blocking update when the server shuts down.
+  # Has no effect when the plugin is unloaded at runtime (e.g. via PlugMan).
   enabled: false
 
 auto-update:

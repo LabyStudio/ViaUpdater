@@ -1,11 +1,11 @@
-package de.labystudio.viaupdater.paper;
+package de.labystudio.viaupdater.bukkit;
 
-import de.labystudio.viaupdater.paper.commands.ViaUpdaterCommand;
+import de.labystudio.viaupdater.bukkit.commands.ViaUpdaterCommand;
 import de.labystudio.viaupdater.updater.ViaUpdater;
 import de.labystudio.viaupdater.updater.exception.CancelledException;
+import de.labystudio.viaupdater.bukkit.nms.ServerStateUtil;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -26,45 +26,9 @@ public class ViaUpdaterPlugin extends JavaPlugin {
     private BukkitTask autoUpdateTask;
 
     @Override
-    public void onLoad() {
+    public void onEnable() {
         this.saveDefaultConfig();
         this.loadConfig();
-
-        if (!this.getConfig().getBoolean("startup-update.enabled", false)) {
-            return;
-        }
-
-        // If any configured project is already enabled the server has already started (e.g. PlugMan) — skip.
-        boolean alreadyRunning = this.updater.getProjects().stream().anyMatch(p -> {
-            Plugin plugin = this.getServer().getPluginManager().getPlugin(p.name());
-            return plugin != null && plugin.isEnabled();
-        });
-
-        if (alreadyRunning) {
-            this.getLogger().warning("Skipping startup-update: Via plugins are already loaded!");
-            return;
-        }
-
-        this.getLogger().info("Running blocking startup update...");
-        PaperProviderContext context = new PaperProviderContext(this);
-        Future<?> task = this.submitTask(() -> {
-            try {
-                this.updater.updateAll(context);
-            } catch (CancelledException ignored) {
-            } catch (Exception e) {
-                this.getLogger().warning("Startup update failed: " + e.getMessage());
-            }
-        });
-        try {
-            task.get();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        } catch (ExecutionException ignored) {
-        }
-    }
-
-    @Override
-    public void onEnable() {
         this.restartAutoUpdater();
 
         // Commands
@@ -101,7 +65,7 @@ public class ViaUpdaterPlugin extends JavaPlugin {
             this.autoUpdateTask = this.getServer().getScheduler().runTaskTimer(this, () ->
                     this.submitTask(() -> {
                         this.getLogger().info("Running scheduled auto-update...");
-                        PaperProviderContext context = new PaperProviderContext(this);
+                        BukkitProviderContext context = new BukkitProviderContext(this);
                         try {
                             this.updater.updateAll(context);
                         } catch (CancelledException ignored) {
@@ -118,6 +82,27 @@ public class ViaUpdaterPlugin extends JavaPlugin {
             this.autoUpdateTask.cancel();
         }
         this.cancelCurrentUpdate();
+
+        boolean isServerShutdown = !ServerStateUtil.isServerRunning();
+
+        if (this.getConfig().getBoolean("shutdown-update.enabled", false) && isServerShutdown) {
+            this.getLogger().info("Running blocking shutdown update...");
+            BukkitProviderContext context = new BukkitProviderContext(this);
+            Future<?> task = this.submitTask(() -> {
+                try {
+                    this.updater.updateAll(context);
+                } catch (CancelledException ignored) {
+                } catch (Exception e) {
+                    this.getLogger().warning("Shutdown update failed: " + e.getMessage());
+                }
+            });
+            try {
+                task.get();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            } catch (ExecutionException ignored) {
+            }
+        }
     }
 
     public Future<?> submitTask(Runnable task) {

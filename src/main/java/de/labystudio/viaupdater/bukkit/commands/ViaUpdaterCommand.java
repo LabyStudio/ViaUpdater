@@ -1,7 +1,7 @@
-package de.labystudio.viaupdater.paper.commands;
+package de.labystudio.viaupdater.bukkit.commands;
 
-import de.labystudio.viaupdater.paper.PaperProviderContext;
-import de.labystudio.viaupdater.paper.ViaUpdaterPlugin;
+import de.labystudio.viaupdater.bukkit.BukkitProviderContext;
+import de.labystudio.viaupdater.bukkit.ViaUpdaterPlugin;
 import de.labystudio.viaupdater.updater.ViaProject;
 import de.labystudio.viaupdater.updater.ViaUpdater;
 import de.labystudio.viaupdater.updater.exception.CancelledException;
@@ -87,7 +87,7 @@ public class ViaUpdaterCommand implements CommandExecutor, TabCompleter {
 
             String target = args[1];
             String sourceId = args.length >= 3 ? args[2] : null;
-            PaperProviderContext context = new PaperProviderContext(this.plugin, sender);
+            BukkitProviderContext context = new BukkitProviderContext(this.plugin, sender);
 
             this.plugin.submitTask(() -> {
                 try {

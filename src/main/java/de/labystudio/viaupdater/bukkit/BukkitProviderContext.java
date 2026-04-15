@@ -1,4 +1,4 @@
-package de.labystudio.viaupdater.paper;
+package de.labystudio.viaupdater.bukkit;
 
 import de.labystudio.viaupdater.updater.source.provider.ProviderContext;
 import de.labystudio.viaupdater.updater.source.provider.StatusType;
@@ -9,17 +9,17 @@ import org.bukkit.command.ConsoleCommandSender;
 
 import java.nio.file.Path;
 
-public class PaperProviderContext implements ProviderContext {
+public class BukkitProviderContext implements ProviderContext {
 
     private final ViaUpdaterPlugin plugin;
     private final CommandSender sender;
 
-    public PaperProviderContext(ViaUpdaterPlugin plugin, CommandSender sender) {
+    public BukkitProviderContext(ViaUpdaterPlugin plugin, CommandSender sender) {
         this.plugin = plugin;
         this.sender = sender;
     }
 
-    public PaperProviderContext(ViaUpdaterPlugin plugin) {
+    public BukkitProviderContext(ViaUpdaterPlugin plugin) {
         this(plugin, null);
     }
 
