@@ -1,9 +1,9 @@
 package de.labystudio.viaupdater.bukkit;
 
 import de.labystudio.viaupdater.bukkit.commands.ViaUpdaterCommand;
+import de.labystudio.viaupdater.bukkit.nms.ServerStateUtil;
 import de.labystudio.viaupdater.updater.ViaUpdater;
 import de.labystudio.viaupdater.updater.exception.CancelledException;
-import de.labystudio.viaupdater.bukkit.nms.ServerStateUtil;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -17,6 +17,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.logging.Level;
 
 public class ViaUpdaterPlugin extends JavaPlugin {
 
@@ -69,8 +70,8 @@ public class ViaUpdaterPlugin extends JavaPlugin {
                         try {
                             this.updater.updateAll(context);
                         } catch (CancelledException ignored) {
-                        } catch (Exception e) {
-                            this.getLogger().warning("Auto-update failed: " + e.getMessage());
+                        } catch (Throwable e) {
+                            this.getLogger().log(Level.WARNING, "Auto-update failed", e);
                         }
                     }), intervalTicks, intervalTicks);
         }
@@ -92,8 +93,8 @@ public class ViaUpdaterPlugin extends JavaPlugin {
                 try {
                     this.updater.updateAll(context);
                 } catch (CancelledException ignored) {
-                } catch (Exception e) {
-                    this.getLogger().warning("Shutdown update failed: " + e.getMessage());
+                } catch (Throwable e) {
+                    this.getLogger().log(Level.WARNING, "Shutdown update failed", e);
                 }
             });
             try {

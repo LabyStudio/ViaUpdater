@@ -2,6 +2,7 @@ package de.labystudio.viaupdater.util;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import de.labystudio.viaupdater.util.gson.RecordTypeAdapterFactory;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.IOException;
@@ -14,7 +15,9 @@ public class HttpUtils {
 
     private static final String USER_AGENT = "ViaUpdater/1.0 (Java/" + System.getProperty("java.version") + ")";
 
-    private static final Gson GSON = new GsonBuilder().create();
+    private static final Gson GSON = new GsonBuilder()
+            .registerTypeAdapterFactory(new RecordTypeAdapterFactory()) // Support old Gson version used in 1.8
+            .create();
 
     @SuppressWarnings("unchecked")
     public static <T> T request(String url, Class<?> clazz) throws IOException {

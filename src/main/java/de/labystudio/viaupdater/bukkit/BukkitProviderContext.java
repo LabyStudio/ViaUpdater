@@ -1,9 +1,9 @@
 package de.labystudio.viaupdater.bukkit;
 
+import de.labystudio.viaupdater.bukkit.adventure.ViaComponent;
+import de.labystudio.viaupdater.bukkit.adventure.ViaNamedTextColor;
 import de.labystudio.viaupdater.updater.source.provider.ProviderContext;
 import de.labystudio.viaupdater.updater.source.provider.StatusType;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 
@@ -25,16 +25,16 @@ public class BukkitProviderContext implements ProviderContext {
 
     @Override
     public void updateStatus(StatusType type, String message) {
-        NamedTextColor color = switch (type) {
-            case SUCCESS -> NamedTextColor.GREEN;
-            case ERROR -> NamedTextColor.RED;
-            case PROGRESS -> NamedTextColor.YELLOW;
+        ViaNamedTextColor color = switch (type) {
+            case SUCCESS -> ViaNamedTextColor.GREEN;
+            case ERROR -> ViaNamedTextColor.RED;
+            case PROGRESS -> ViaNamedTextColor.YELLOW;
         };
-        Component component = Component.text(message, color);
+        ViaComponent component = ViaComponent.text(message, color);
 
-        this.plugin.getComponentLogger().info(component);
+        component.logToConsole(this.plugin);
         if (this.sender != null && !(this.sender instanceof ConsoleCommandSender)) {
-            this.sender.sendMessage(component);
+            component.send(this.sender);
         }
     }
 
